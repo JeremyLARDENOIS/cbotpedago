@@ -39,7 +39,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         ld_json_message_init(&message);
         ld_json_pack_message(&message, (json_t *) data);
         
-        sprintf( message_seb, " %ld je te vois taper", message.author->id ) ;
+        sprintf( message_seb, " %p je te vois taper", message.author ) ;
 
 
         ld_send_basic_message(context, message.channel_id, message_seb );
