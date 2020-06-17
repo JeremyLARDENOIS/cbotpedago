@@ -32,14 +32,16 @@ void int_handler(int i) {
 int callback(struct ld_context *context, enum ld_callback_reason reason, void *data, int len) {
     
     struct ld_json_message message;
-
+    char message_seb[255] ;
 
     if(reason == LD_CALLBACK_TYPING_START ) {
         
         ld_json_message_init(&message);
         ld_json_pack_message(&message, (json_t *) data);
         
-        ld_send_basic_message(context, message.channel_id, "je te vois taper" );
+        sprintf( message_seb, "%s je te vois taper", message.author->username ) ;
+
+        ld_send_basic_message(context, message.channel_id, message_seb );
 
 
         return 0 ;
