@@ -37,6 +37,9 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
 
     if(reason == LD_CALLBACK_TYPING_START ) {
         
+        ld_json_message_init(&message);
+        ld_json_pack_message(&message, (json_t *) data);
+        
         sprintf( message_seb, "Je te vois taper" ) ;
         ld_send_basic_message(context, message.channel_id, message_seb );
 
