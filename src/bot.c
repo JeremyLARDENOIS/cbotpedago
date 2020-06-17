@@ -39,7 +39,8 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         ld_json_message_init(&message);
         ld_json_pack_message(&message, (json_t *) data);
         
-        sprintf( message_seb, "%s je te vois taper", message.author->username ) ;
+        sprintf( message_seb, "je te vois taper" ) ; // , message.author->username ) ;
+
 
         ld_send_basic_message(context, message.channel_id, message_seb );
 
@@ -51,7 +52,6 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     if (reason == LD_CALLBACK_MESSAGE_CREATE) {
 
         ld_json_message_init(&message);
-
         ld_json_pack_message(&message, (json_t *) data);
 
         if(message.author->id == context->current_user->id) {
