@@ -37,7 +37,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
 
     if(reason == LD_CALLBACK_TYPING_START ) {
         
-        sprintf( message_seb, "Je te vois taper %p", data ) ;
+        sprintf( message_seb, "Je te vois taper" ) ;
         ld_send_basic_message(context, message.channel_id, message_seb );
 
 
