@@ -30,35 +30,49 @@ void int_handler(int i) {
  * data and len contain data that may be needed for the callback, their use depends on the reason for the callback.
  */
 int callback(struct ld_context *context, enum ld_callback_reason reason, void *data, int len) {
-    // if content == "ayy", POST "lmao" to that channel
-
-    if(reason != LD_CALLBACK_MESSAGE_CREATE) {
-        return 0;
-    }
-
+    
     struct ld_json_message message;
-    ld_json_message_init(&message);
 
-    ld_json_pack_message(&message, (json_t *) data);
 
-    if(message.author->id == context->current_user->id) {
+    if(reason == LD_CALLBACK_TYPING_START ) {
+        
+        ld_json_message_init(&message);
+        ld_json_pack_message(&message, (json_t *) data);
+        
+        ld_send_basic_message(context, message.channel_id, "je te vois taper" );
+
+
+        return 0 ;
+    }
+
+
+    if (reason == LD_CALLBACK_MESSAGE_CREATE) {
+
+        ld_json_message_init(&message);
+
+        ld_json_pack_message(&message, (json_t *) data);
+
+        if(message.author->id == context->current_user->id) {
+            return 0;
+        }
+
+        if(message.author->bot == 1) {
+            return 0;
+        }
+
+        if(message.channel_id == 0) {
+            return 0; //realistically speaking, the channel ID will never be 0 (but you never know...)
+        }
+
+        if(strncasecmp(message.content, trigger, strlen(trigger)) != 0) {
+            return 0;
+        }
+
+        ld_send_basic_message(context, message.channel_id, response);
         return 0;
     }
 
-    if(message.author->bot == 1) {
-        return 0;
-    }
-
-    if(message.channel_id == 0) {
-        return 0; //realistically speaking, the channel ID will never be 0 (but you never know...)
-    }
-
-    if(strncasecmp(message.content, trigger, strlen(trigger)) != 0) {
-        return 0;
-    }
-
-    ld_send_basic_message(context, message.channel_id, response);
-    return 0;
+    return 0 ;
 }
 
 int main(int argc, char *argv[]) {
