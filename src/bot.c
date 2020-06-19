@@ -19,7 +19,13 @@ char *trigger = "ayy", *response = "lmao";
 
 void int_handler(int i) {
     bot_exit = 1;
-}
+}   
+
+//---APPEL-------------------------
+char liste_appel [255] [33]; //un pseudo ne peut avoir + de 32 caractères
+int taille_liste_appel = 0;
+int appel = 0; //boolean
+//---------------------------------
 
 /*
  * main way of user interaction with libdiscord
@@ -29,24 +35,28 @@ void int_handler(int i) {
  * ld_callback_reason is the reason for the library calling the callback. See the enum declaration in libdiscord.h
  * data and len contain data that may be needed for the callback, their use depends on the reason for the callback.
  */
+
 int callback(struct ld_context *context, enum ld_callback_reason reason, void *data, int len) {
     
     struct ld_json_message message;
     struct ld_json_user user;
-    char message_seb[255] ;
+    
+    char message_out[255] ;
 
+    /*
     if(reason == LD_CALLBACK_TYPING_START ) {
         
         ld_json_message_init(&message);
         ld_json_pack_message(&message, (json_t *) data);
        
-        sprintf( message_seb, " mentions %p\n reactions %p", message.mentions, message.reactions ) ;
+        sprintf( message_out, " mentions %p\n reactions %p", message.mentions, message.reactions ) ;
 
-        ld_send_basic_message(context, message.channel_id, message_seb );
+        ld_send_basic_message(context, message.channel_id, message_out );
 
 
         return 0 ;
     }
+    */
 
 
     if (reason == LD_CALLBACK_MESSAGE_CREATE) {
@@ -65,14 +75,87 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         if(message.channel_id == 0) {
             return 0; //realistically speaking, the channel ID will never be 0 (but you never know...)
         }
+        
+         
 
-        if(strncasecmp(message.content, trigger, strlen(trigger)) != 0) {
+        //---POUR L'APPEL------------------------------------------------------------------------------------------------
+
+        //Réponds Coucou suivi du pseudo à la personne présente
+        if(strncasecmp(message.content, "!present", strlen("!présent")) == 0) {
+            sprintf( message_out, "Coucou %s", message.author->username ) ;
+            ld_send_basic_message(context, message.channel_id, message_out);
+
+            if (appel) {
+
+                //liste_appel [taille_liste_appel] = message.author->username;
+                strcpy(liste_appel [taille_liste_appel], message.author->username);
+                taille_liste_appel += 1;
+
+                sprintf( message_out, "%s est présent", message.author->username ) ;
+                ld_send_basic_message(context, message.channel_id, message_out);
+
+            }
+
             return 0;
         }
 
-        sprintf( message_seb, "coucou %s", message.author->username ) ;
-        ld_send_basic_message(context, message.channel_id, message_seb);
-        return 0;
+        //Commence à faire l'appel si la personne à le role professeur : pas implémenté
+        if(strncasecmp(message.content, "!appel start", strlen("!appel start")) == 0) {  
+            //if (prof) {
+                if (!appel) {
+                    sprintf( message_out, "Début de l'appel");
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                    appel = 1;
+                    taille_liste_appel = 0;
+                } else {
+                    sprintf( message_out, "Un appel est déja en cours" ) ;
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                }
+            //} else {
+            //  sprintf( message_out, "Appel non autorisé", message.author->username ) ;
+            //  ld_send_basic_message(context, message.channel_id, message_out);
+            //}
+            
+            return 0;
+        }
+
+        if(strncasecmp(message.content, "!appel stop", strlen("!appel stop")) == 0) {
+            appel = 0;
+            taille_liste_appel = 0;
+
+            return 0;
+        }
+
+        if(strncasecmp(message.content, "!appel list", strlen("!appel list")) == 0) {
+            int i;
+            char str_liste_appel [200];
+            str_liste_appel [0] = "\0";
+            for (i = 0; i < taille_liste_appel; i++){
+                printf("\033[1;31m %s %s \n \033[0m ",str_liste_appel,liste_appel[i]);
+                strcat(str_liste_appel,liste_appel[i]);
+                if (i < taille_liste_appel-1){
+                    strcat(str_liste_appel, ", ");
+                }
+            }
+            
+            sprintf( message_out, "Les présents sont : %s", str_liste_appel ) ;
+            ld_send_basic_message(context, message.channel_id, message_out);
+            return 0;
+        }
+
+
+        //----------------------------------------------------------------------------------------------------------------
+        //---POUR LE SONDAGE-------------------------------------------------------------------------------------------------------------
+        if(strncasecmp(message.content, "!sondage start", strlen("!appel list")) == 0) {
+
+            return 0;
+        }
+        //----------------------------------------------------------------------------------------------------------------
+
+
+
+
+
     }
 
     return 0 ;
