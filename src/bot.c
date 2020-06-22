@@ -112,72 +112,77 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         }
 
         //Commence à faire l'appel si la personne à le role professeur : pas implémenté
-        if(strncasecmp(message.content, "!appel start", strlen("!appel start")) == 0) {  
-            //if (prof) {
-                if (!appel) {
-                    sprintf( message_out, "Début de l'appel");
-                    ld_send_basic_message(context, message.channel_id, message_out);
-                    appel = 1;
-                    taille_liste_appel = 0;
-                } else {
-                    sprintf( message_out, "Un appel est déja en cours" ) ;
-                    ld_send_basic_message(context, message.channel_id, message_out);
-                }
-            //} else {
-            //  sprintf( message_out, "Appel non autorisé", message.author->username ) ;
-            //  ld_send_basic_message(context, message.channel_id, message_out);
-            //}
-            
-            return 0;
-        }
-
-        if(strncasecmp(message.content, "!appel stop", strlen("!appel stop")) == 0) {
-            if (appel == 1){
-                appel = 0;
-                sprintf( message_out, "Fin de l'appel") ;
-                ld_send_basic_message(context, message.channel_id, message_out);
+        if(strncasecmp(message.content, "!appel", strlen("!appel")) == 0) {  
+            if(strncasecmp(message.content, "!appel start", strlen("!appel start")) == 0) {  
+                //if (prof) {
+                    if (!appel) {
+                        sprintf( message_out, "Début de l'appel");
+                        ld_send_basic_message(context, message.channel_id, message_out);
+                        appel = 1;
+                        taille_liste_appel = 0;
+                    } else {
+                        sprintf( message_out, "Un appel est déja en cours" ) ;
+                        ld_send_basic_message(context, message.channel_id, message_out);
+                    }
+                //} else {
+                //  sprintf( message_out, "Appel non autorisé", message.author->username ) ;
+                //  ld_send_basic_message(context, message.channel_id, message_out);
+                //}
+                
+                return 0;
             } else {
-                sprintf( message_out, "Pas d'appel en cours") ;
-                ld_send_basic_message(context, message.channel_id, message_out);
-            }
-            return 0;
-        }
-
-        if(strncasecmp(message.content, "!appel list", strlen("!appel list")) == 0) {
-            int i;
-            char str_liste_appel [200] = "\0";
-            char str_tmp [200] = "\0" ;
-            
-            if (appel == 0) { //Pas d'appel en cours
-                sprintf( message_out, "Pas d'appel en cours") ;
-                ld_send_basic_message(context, message.channel_id, message_out);
-                return 0;
-            }
-
-            if (taille_liste_appel == 0){
-                sprintf( message_out, "Personne n'est présent :cry:" ) ;
-                ld_send_basic_message(context, message.channel_id, message_out);
-                return 0;
-            }
-
-            for (i = 0; i < taille_liste_appel; i++){
-                //printf("\033[1;31m %s %s \n \033[0m ",str_liste_appel,liste_appel[i]);
-                printf("\033[1;31m");
-                printf("%d -> %s \n",i,liste_appel[i]);
-                sprintf(str_tmp,"%s%s",str_liste_appel,liste_appel[i]);
-                sprintf(str_liste_appel,"%s",str_tmp);
-                if (i < taille_liste_appel-1){
-                    sprintf(str_tmp,"%s, ",str_liste_appel);
-                    sprintf(str_liste_appel,"%s",str_tmp);
+            if(strncasecmp(message.content, "!appel stop", strlen("!appel stop")) == 0) {
+                if (appel == 1){
+                    appel = 0;
+                    sprintf( message_out, "Fin de l'appel") ;
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                } else {
+                    sprintf( message_out, "Pas d'appel en cours") ;
+                    ld_send_basic_message(context, message.channel_id, message_out);
                 }
-                printf("%s \n",str_liste_appel);
-                printf("\033[0m");
-            }
-            sprintf( message_out, "Les présents sont : %s", str_liste_appel ) ;
-            ld_send_basic_message(context, message.channel_id, message_out);
-            return 0;
-        }
+                return 0;
+            } else { 
+            
+            if(strncasecmp(message.content, "!appel list", strlen("!appel list")) == 0) {
+                int i;
+                char str_liste_appel [200] = "\0";
+                char str_tmp [200] = "\0" ;
+                
+                if (appel == 0) { //Pas d'appel en cours
+                    sprintf( message_out, "Pas d'appel en cours") ;
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                    return 0;
+                }
 
+                if (taille_liste_appel == 0){
+                    sprintf( message_out, "Personne n'est présent :cry:" ) ;
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                    return 0;
+                }
+
+                for (i = 0; i < taille_liste_appel; i++){
+                    //printf("\033[1;31m %s %s \n \033[0m ",str_liste_appel,liste_appel[i]);
+                    printf("\033[1;31m");
+                    printf("%d -> %s \n",i,liste_appel[i]);
+                    sprintf(str_tmp,"%s%s",str_liste_appel,liste_appel[i]);
+                    sprintf(str_liste_appel,"%s",str_tmp);
+                    if (i < taille_liste_appel-1){
+                        sprintf(str_tmp,"%s, ",str_liste_appel);
+                        sprintf(str_liste_appel,"%s",str_tmp);
+                    }
+                    printf("%s \n",str_liste_appel);
+                    printf("\033[0m");
+                }
+                sprintf( message_out, "Les présents sont : %s", str_liste_appel ) ;
+                ld_send_basic_message(context, message.channel_id, message_out);
+                return 0;
+            } else { 
+                sprintf( message_out, "Usage : ![commande]\n!appel start -> commence l'appel \n\
+!present -> permet de dire que l'on est présent \n\
+!appel list -> liste les personnes présentes \n\
+!appel stop -> arrête l'appel") ;
+                ld_send_basic_message(context, message.channel_id, message_out);
+            }}}}
 
         //----------------------------------------------------------------------------------------------------------------
         //---POUR LE SONDAGE-------------------------------------------------------------------------------------------------------------
