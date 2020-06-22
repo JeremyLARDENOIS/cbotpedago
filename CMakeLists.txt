@@ -53,7 +53,7 @@ add_executable( "bot" ${src} )
 ### Linking
 
 target_link_libraries( "bot" 
-                     "${DISCORD_LIBRARY}" curl -g )
+                     "${DISCORD_LIBRARY}" curl )
 
 
 ### Install 
