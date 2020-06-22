@@ -86,9 +86,21 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
             ld_send_basic_message(context, message.channel_id, message_out);
 
             if (appel) {
-
                 //liste_appel [taille_liste_appel] = message.author->username;
-                strcpy(liste_appel [taille_liste_appel], message.author->username);
+                //strcpy(liste_appel [taille_liste_appel], message.author->username);
+                
+                //On verifie qu'il ne soit pas deja present
+                int i;
+                for (i = 0; i < taille_liste_appel ; i++){
+                    if(strncasecmp(message.author->username, liste_appel[i], 32) == 0) {  
+                        sprintf( message_out, "%s est déjà présent sur la liste d'appel", message.author->username ) ;
+                        ld_send_basic_message(context, message.channel_id, message_out);
+                        return 0;
+                    }
+                } 
+
+
+                sprintf(liste_appel [taille_liste_appel],"%s", message.author->username);
                 taille_liste_appel += 1;
 
                 sprintf( message_out, "%s est présent", message.author->username ) ;
@@ -120,24 +132,47 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         }
 
         if(strncasecmp(message.content, "!appel stop", strlen("!appel stop")) == 0) {
-            appel = 0;
-            taille_liste_appel = 0;
-
+            if (appel == 1){
+                appel = 0;
+                sprintf( message_out, "Fin de l'appel") ;
+                ld_send_basic_message(context, message.channel_id, message_out);
+            } else {
+                sprintf( message_out, "Pas d'appel en cours") ;
+                ld_send_basic_message(context, message.channel_id, message_out);
+            }
             return 0;
         }
 
         if(strncasecmp(message.content, "!appel list", strlen("!appel list")) == 0) {
             int i;
-            char str_liste_appel [200];
-            str_liste_appel [0] = "\0";
-            for (i = 0; i < taille_liste_appel; i++){
-                printf("\033[1;31m %s %s \n \033[0m ",str_liste_appel,liste_appel[i]);
-                strcat(str_liste_appel,liste_appel[i]);
-                if (i < taille_liste_appel-1){
-                    strcat(str_liste_appel, ", ");
-                }
-            }
+            char str_liste_appel [200] = "\0";
+            char str_tmp [200] = "\0" ;
             
+            if (appel == 0) { //Pas d'appel en cours
+                sprintf( message_out, "Pas d'appel en cours") ;
+                ld_send_basic_message(context, message.channel_id, message_out);
+                return 0;
+            }
+
+            if (taille_liste_appel == 0){
+                sprintf( message_out, "Personne n'est présent :cry:" ) ;
+                ld_send_basic_message(context, message.channel_id, message_out);
+                return 0;
+            }
+
+            for (i = 0; i < taille_liste_appel; i++){
+                //printf("\033[1;31m %s %s \n \033[0m ",str_liste_appel,liste_appel[i]);
+                printf("\033[1;31m");
+                printf("%d -> %s \n",i,liste_appel[i]);
+                sprintf(str_tmp,"%s%s",str_liste_appel,liste_appel[i]);
+                sprintf(str_liste_appel,"%s",str_tmp);
+                if (i < taille_liste_appel-1){
+                    sprintf(str_tmp,"%s, ",str_liste_appel);
+                    sprintf(str_liste_appel,"%s",str_tmp);
+                }
+                printf("%s \n",str_liste_appel);
+                printf("\033[0m");
+            }
             sprintf( message_out, "Les présents sont : %s", str_liste_appel ) ;
             ld_send_basic_message(context, message.channel_id, message_out);
             return 0;
