@@ -27,6 +27,16 @@ int taille_liste_appel = 0;
 int appel = 0; //boolean
 //---------------------------------
 
+//---SONDAGE-----------------------
+int nb_choix;
+char liste_choix [10][100]; //tableau de possibilités
+char question [100];
+int nb_participant;
+char liste_participants [255] [33]; //liste des participants
+int choix_participants [255]; //choix de chaque participants ; correspondance avec liste_participants
+int sondage = 0;//boolean
+//---------------------------------
+
 /*
  * main way of user interaction with libdiscord
  * the user callback returns 0 if everything is OK
@@ -41,7 +51,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     struct ld_json_message message;
     struct ld_json_user user;
     
-    char message_out[255] ;
+    char message_out[512] ;
 
     /*
     if(reason == LD_CALLBACK_TYPING_START ) {
@@ -125,12 +135,13 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                         ld_send_basic_message(context, message.channel_id, message_out);
                     }
                 //} else {
-                //  sprintf( message_out, "Appel non autorisé", message.author->username ) ;
+                //  sprintf( message_out, "Action non autorisé", message.author->username ) ;
                 //  ld_send_basic_message(context, message.channel_id, message_out);
                 //}
                 
                 return 0;
-            } else {
+            }
+
             if(strncasecmp(message.content, "!appel stop", strlen("!appel stop")) == 0) {
                 if (appel == 1){
                     appel = 0;
@@ -141,12 +152,12 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                     ld_send_basic_message(context, message.channel_id, message_out);
                 }
                 return 0;
-            } else { 
+            }  
             
             if(strncasecmp(message.content, "!appel list", strlen("!appel list")) == 0) {
                 int i;
                 char str_liste_appel [200] = "\0";
-                char str_tmp [200] = "\0" ;
+                char str_tmp [512] = "\0" ;
                 
                 if (appel == 0) { //Pas d'appel en cours
                     sprintf( message_out, "Pas d'appel en cours") ;
@@ -176,18 +187,76 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                 sprintf( message_out, "Les présents sont : %s", str_liste_appel ) ;
                 ld_send_basic_message(context, message.channel_id, message_out);
                 return 0;
-            } else { 
-                sprintf( message_out, "Usage : ![commande]\n!appel start -> commence l'appel \n\
+            } 
+                sprintf( message_out, "Usage : ![commande] [action] option\n\
+!appel start -> commence l'appel \n\
 !present -> permet de dire que l'on est présent \n\
 !appel list -> liste les personnes présentes \n\
 !appel stop -> arrête l'appel") ;
                 ld_send_basic_message(context, message.channel_id, message_out);
-            }}}}
+            }
 
         //----------------------------------------------------------------------------------------------------------------
         //---POUR LE SONDAGE-------------------------------------------------------------------------------------------------------------
-        if(strncasecmp(message.content, "!sondage start", strlen("!appel list")) == 0) {
-
+        if(strncasecmp(message.content, "!sondage", strlen("!sondage")) == 0) {
+            if(strncasecmp(message.content, "!sondage start", strlen("!sondage start")) == 0) {
+                if (!sondage) {
+                    sprintf( message_out, "Début du sondage");
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                    sondage = 1;
+                    nb_choix = 0;
+                    nb_participant = 0;
+                    if(strncasecmp(message.content, "!sondage start ", strlen("!sondage start ")) == 0) {
+                        int i=0;
+                        while (i<strlen(message.content)-strlen("!sondage start")){
+                            question[i] = message.content[i+strlen("!sondage start")];
+                            i++;
+                        }                        
+                        question[i] = "\0";
+                    } else {
+                        question[0] = "\0";
+                    }
+                } else {
+                    sprintf( message_out, "Un sondage est déja en cours" ) ;
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                }
+                return 0;
+            }
+            if(strncasecmp(message.content, "!sondage add", strlen("!sondage add")) == 0) {
+                return 0;
+            }
+            if(strncasecmp(message.content, "!sondage choose", strlen("!sondage choose")) == 0) {
+                return 0;
+            }
+            if(strncasecmp(message.content, "!sondage rm", strlen("!sondage rm")) == 0) {
+                return 0;
+            }
+            if(strncasecmp(message.content, "!sondage show", strlen("!sondage show")) == 0) {
+                sprintf( message_out, "%s",question ) ;
+                ld_send_basic_message(context, message.channel_id, message_out);
+                return 0;
+            } 
+            if(strncasecmp(message.content, "!sondage stop", strlen("!sondage stop")) == 0) {
+                if (sondage == 1){
+                    sondage = 0;
+                    sprintf( message_out, "Fin du sondage") ;
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                } else {
+                    sprintf( message_out, "Pas de sondage en cours") ;
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                }
+                return 0;
+                return 0;
+            }
+            sprintf( message_out, "Usage : ![commande] [action] (option)\n\
+!sondage start (question) -> commence le sondage \n\
+!sondage add (choix) -> rajoute un choix au sondage \n\
+!sondage choose (n°choix) -> permet de choisir une option du sondage \n\
+!sondage rm (n°choix) -> rajoute un choix au sondage \n\
+!sondage show -> montre l'etat du sondage \n\
+!appel stop -> arrête le sondage") ;
+            ld_send_basic_message(context, message.channel_id, message_out);
+            
             return 0;
         }
         //----------------------------------------------------------------------------------------------------------------
