@@ -34,6 +34,7 @@ char question [100];
 int nb_participant;
 char liste_participants [255] [33]; //liste des participants
 int choix_participants [255]; //choix de chaque participants ; correspondance avec liste_participants
+int vote_choix [10];
 int sondage = 0;//boolean
 //---------------------------------
 
@@ -237,6 +238,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                 if (sondage){
                     if (nb_choix < 10 ){
                         substring(message.content,liste_choix[nb_choix],strlen("!sondage add")+2,strlen(message.content)-strlen("!sondage add")-1);
+                        vote_choix[nb_choix] = 0;
                         sprintf( message_out, "Choix n°%d : \"%s\" ajouté",nb_choix+1,liste_choix[nb_choix] ) ;
                         ld_send_basic_message(context, message.channel_id, message_out);
                         nb_choix++;
@@ -251,8 +253,64 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                 return 0;
             }
             if(strncasecmp(message.content, "!sondage choose", strlen("!sondage choose")) == 0) {
+/* 9l to del
+int nb_choix;
+char liste_choix [10][100]; //tableau de possibilités
+char question [100];
+int nb_participant;
+char liste_participants [255] [33]; //liste des participants
+int choix_participants [255]; //choix de chaque participants ; correspondance avec liste_participants
+int vote_choix [10];
+int sondage = 0;//boolean
+*/
                 if (sondage){
-
+                    char tmp [2];
+                    substring(message.content,tmp,strlen("!sondage choose")+2,strlen(message.content)-strlen("!sondage choose")-1);
+                    //Voir table ASCII (add and sub str with int)
+                    if ((strlen(tmp) < 2)&& ( "0" <= tmp[0] <= nb_choix+"0" )) { //Si tmp est un nombre entre 0 et nb_choix
+                        int i;
+                        for (i = 0; i<nb_participant; i++){
+                            printf("%s ; %s\n",message.author->username,liste_participants[i]);
+                            if (message.author->username == liste_participants [i]){
+                                //Si a participé
+                                if ( tmp[0] == "0" ) {
+                                    //Annulation du vote
+                                    vote_choix[choix_participants[i]]--;
+                                    int j;
+                                    for (j = i; j<nb_participant;j++){
+                                        sprintf(liste_participants[j],"%s",liste_participants[j+1]);
+                                        sprintf(liste_participants[j],"%s",liste_participants[j+1]);
+                                        choix_participants[j]=choix_participants[j+1];
+                                    }
+                                    nb_participant --;
+                                    sprintf( message_out, "Votre vote a été annulé") ;
+                                } else {
+                                    //Changement du vote
+                                    vote_choix[choix_participants[i]]--;
+                                    choix_participants[i] = tmp - 49;
+                                    vote_choix[choix_participants[i]]++;
+                                    sprintf( message_out, "Votre vote a été changé") ;
+                                }
+                                ld_send_basic_message(context, message.channel_id, message_out);
+                                return 0;
+                            } 
+                        }
+                        //Si n'a pas participé
+                        if ( tmp[0] == "0" ) {
+                            sprintf( message_out, "Vous n'avez pas encore voté") ;
+                            ld_send_basic_message(context, message.channel_id, message_out);
+                        } else {
+                            sprintf(liste_participants[nb_participant],"%s", message.author->username);
+                            choix_participants[nb_participant] = tmp[0] - 49;
+                            vote_choix[tmp[0]-49]++;
+                            sprintf( message_out, "%s a voté %d : \"%s\"", message.author->username, choix_participants[nb_participant]+1,liste_choix[choix_participants[nb_participant]]) ;
+                            nb_participant++;
+                            ld_send_basic_message(context, message.channel_id, message_out);
+                        }
+                    } else {
+                        sprintf( message_out, "Veuillez choisir un nombre entre 0 et %d", nb_choix ) ;
+                        ld_send_basic_message(context, message.channel_id, message_out);
+                    }
                 } else {
                     sprintf( message_out, "Pas de sondage en cours" ) ;
                     ld_send_basic_message(context, message.channel_id, message_out);
@@ -264,7 +322,15 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                     if (nb_choix) {
                         char tmp [2];
                         substring(message.content,tmp,strlen("!sondage rm")+2,strlen(message.content)-strlen("!sondage rm")-1);
-                        if ((strlen(tmp) < 2)&& ( "1" <= tmp[0] <= nb_choix+48 )) { //Si tmp est un nombre entre 0 et nb_choix
+                        //Voir table ASCII (add and sub str with int)
+                        if ((strlen(tmp) < 2)&& ( "1" <= tmp[0] <= nb_choix+"0" )) { //Si tmp est un nombre entre 0 et nb_choix
+                            int choix_rm = tmp[0] - 49;
+                            int i;
+                            for (i=choix_rm ; i<nb_choix ; i++){
+                                sprintf(liste_choix[i],"%s",liste_choix[i+1]);
+                                vote_choix[i]=vote_choix[i+1];
+                            }
+                            nb_choix --;
                         } else {
                             sprintf( message_out, "Veuillez choisir un nombre entre 1 et %d", nb_choix ) ;
                             ld_send_basic_message(context, message.channel_id, message_out);
@@ -288,7 +354,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                     
                     int i;
                     for (i = 0; i < nb_choix ; i ++){
-                        sprintf(message_out,"%s\n%d : \"%s\"", tmp, i+1, liste_choix[i]);
+                        sprintf(message_out,"%s\n%d : \"%s\", %d vote(s)", tmp, i+1, liste_choix[i], vote_choix[i]);
                         sprintf(tmp,"%s",message_out);
                     }
                     
@@ -324,10 +390,6 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
             return 0;
         }
         //----------------------------------------------------------------------------------------------------------------
-
-
-
-
 
     }
 
@@ -478,7 +540,6 @@ int main(int argc, char *argv[]) {
                 bot_exit = 1;
                 ld_error("ld_service returned (%d), exiting", ret);
             }
-
         }
     }
     ld_info("disconnecting from discord");
