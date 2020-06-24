@@ -45,6 +45,15 @@ int sondage = 0;//boolean
  * ld_callback_reason is the reason for the library calling the callback. See the enum declaration in libdiscord.h
  * data and len contain data that may be needed for the callback, their use depends on the reason for the callback.
  */
+void substring(char s[], char sub[], int p, int l) {
+       int c = 0;
+          
+          while (c < l) {
+                    sub[c] = s[p+c-1];
+                          c++;
+                             }
+             sub[c] = '\0';
+}
 
 int callback(struct ld_context *context, enum ld_callback_reason reason, void *data, int len) {
     
@@ -206,7 +215,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                     sondage = 1;
                     nb_choix = 0;
                     nb_participant = 0;
-                    if(strncasecmp(message.content, "!sondage start ", strlen("!sondage start ")) == 0) {
+                    /*if(strncasecmp(message.content, "!sondage start ", strlen("!sondage start ")) == 0) {
                         int i=0;
                         while (i<strlen(message.content)-strlen("!sondage start")){
                             question[i] = message.content[i+strlen("!sondage start")];
@@ -215,7 +224,9 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                         question[i] = "\0";
                     } else {
                         question[0] = "\0";
-                    }
+                    }*/
+                    substring(message.content,question,strlen("!sondage start")+2,strlen(message.content)-strlen("!sondage start")-1);
+                    
                 } else {
                     sprintf( message_out, "Un sondage est déja en cours" ) ;
                     ld_send_basic_message(context, message.channel_id, message_out);
@@ -223,21 +234,74 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                 return 0;
             }
             if(strncasecmp(message.content, "!sondage add", strlen("!sondage add")) == 0) {
+                if (sondage){
+                    if (nb_choix < 10 ){
+                        substring(message.content,liste_choix[nb_choix],strlen("!sondage add")+2,strlen(message.content)-strlen("!sondage add")-1);
+                        sprintf( message_out, "Choix n°%d : \"%s\" ajouté",nb_choix+1,liste_choix[nb_choix] ) ;
+                        ld_send_basic_message(context, message.channel_id, message_out);
+                        nb_choix++;
+                    } else {
+                        sprintf( message_out, "Pas plus de 10 choix possibles" ) ;
+                        ld_send_basic_message(context, message.channel_id, message_out);
+                    }
+                } else {
+                    sprintf( message_out, "Pas de sondage en cours" ) ;
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                }
                 return 0;
             }
             if(strncasecmp(message.content, "!sondage choose", strlen("!sondage choose")) == 0) {
+                if (sondage){
+
+                } else {
+                    sprintf( message_out, "Pas de sondage en cours" ) ;
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                }
                 return 0;
             }
             if(strncasecmp(message.content, "!sondage rm", strlen("!sondage rm")) == 0) {
+                if (sondage){
+                    if (nb_choix) {
+                        char tmp [2];
+                        substring(message.content,tmp,strlen("!sondage rm")+2,strlen(message.content)-strlen("!sondage rm")-1);
+                        if ((strlen(tmp) < 2)&& ( "1" <= tmp[0] <= nb_choix+48 )) { //Si tmp est un nombre entre 0 et nb_choix
+                        } else {
+                            sprintf( message_out, "Veuillez choisir un nombre entre 1 et %d", nb_choix ) ;
+                            ld_send_basic_message(context, message.channel_id, message_out);
+                        }
+                    } else { 
+                        sprintf( message_out, "Aucun choix a supprimer" ) ;
+                        ld_send_basic_message(context, message.channel_id, message_out);
+                    }
+                } else {
+                    sprintf( message_out, "Pas de sondage en cours" ) ;
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                }
                 return 0;
             }
             if(strncasecmp(message.content, "!sondage show", strlen("!sondage show")) == 0) {
-                sprintf( message_out, "%s",question ) ;
-                ld_send_basic_message(context, message.channel_id, message_out);
+                if (sondage){
+                    sprintf( message_out, "%s",question ) ;
+
+                    char tmp [512];
+                    sprintf(tmp,"%s",message_out);
+                    
+                    int i;
+                    for (i = 0; i < nb_choix ; i ++){
+                        sprintf(message_out,"%s\n%d : \"%s\"", tmp, i+1, liste_choix[i]);
+                        sprintf(tmp,"%s",message_out);
+                    }
+                    
+
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                } else {
+                    sprintf( message_out, "Pas de sondage en cours" ) ;
+                    ld_send_basic_message(context, message.channel_id, message_out);
+                }
                 return 0;
             } 
             if(strncasecmp(message.content, "!sondage stop", strlen("!sondage stop")) == 0) {
-                if (sondage == 1){
+                if (sondage){
                     sondage = 0;
                     sprintf( message_out, "Fin du sondage") ;
                     ld_send_basic_message(context, message.channel_id, message_out);
